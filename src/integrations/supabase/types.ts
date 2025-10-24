@@ -11,52 +11,64 @@ export type Database = {
     Tables: {
       users: {
         Row: {
-          id: number
+          id: string // UUID
           username: string
-          password: string
+          pass: string // Plain text password
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          id?: number
+          id?: string
           username: string
-          password: string
+          pass: string
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          id?: number
+          id?: string
           username?: string
-          password?: string
+          pass?: string
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
       auths: {
         Row: {
-          id: number
-          user_id: number
+          id: string // UUID
+          user_id: string // UUID
           provider: string
           name: string
           key: string
           algorithm: string
           digits: number
           period: number
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          id?: number
-          user_id: number
+          id?: string
+          user_id: string
           provider: string
           name: string
           key: string
           algorithm?: string
           digits?: number
           period?: number
+          created_at?: string
+          updated_at?: string
         }
         Update: {
-          id?: number
-          user_id?: number
+          id?: string
+          user_id?: string
           provider?: string
           name?: string
           key?: string
           algorithm?: string
           digits?: number
           period?: number
+          created_at?: string
+          updated_at?: string
         }
         Relationships: [
           {

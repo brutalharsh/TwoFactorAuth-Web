@@ -18,16 +18,16 @@ import {
 interface AccountCardProps {
   account: {
     id: string;
-    issuer: string;
-    account_name: string;
-    secret: string;
-    algorithm: 'SHA1' | 'SHA256' | 'SHA512';
-    digits: 6 | 8;
+    provider: string; // Previously 'issuer'
+    name: string; // Previously 'account_name'
+    key: string; // Previously 'secret'
+    algorithm: string; // 'SHA1' | 'SHA256' | 'SHA512'
+    digits: number; // 6 or 8
     period: number;
   };
   onClick: () => void;
-  onDelete: (id: string) => void;
-  onEdit: (account: AccountCardProps['account']) => void;
+  onDelete?: (id: string) => void;
+  onEdit?: (account: AccountCardProps['account']) => void;
 }
 
 export function AccountCard({ account, onClick, onDelete, onEdit }: AccountCardProps) {
@@ -39,9 +39,9 @@ export function AccountCard({ account, onClick, onDelete, onEdit }: AccountCardP
   useEffect(() => {
     const updateCode = () => {
       const newCode = generateTOTP({
-        secret: account.secret,
-        algorithm: account.algorithm,
-        digits: account.digits,
+        secret: account.key,
+        algorithm: account.algorithm as 'SHA1' | 'SHA256' | 'SHA512',
+        digits: account.digits as 6 | 8,
         period: account.period,
       });
       setCode(newCode);
@@ -78,11 +78,15 @@ export function AccountCard({ account, onClick, onDelete, onEdit }: AccountCardP
 
   const handleEdit = (e: React.MouseEvent) => {
     e.stopPropagation();
-    onEdit(account);
+    if (onEdit) {
+      onEdit(account);
+    }
   };
 
   const confirmDelete = () => {
-    onDelete(account.id);
+    if (onDelete) {
+      onDelete(account.id);
+    }
     setShowDeleteDialog(false);
     toast.success('Account deleted successfully');
   };
@@ -91,8 +95,8 @@ export function AccountCard({ account, onClick, onDelete, onEdit }: AccountCardP
   const progressColor = getProgressColor(progressPercentage);
 
   // Get initials for avatar
-  const getInitials = (issuer: string) => {
-    return issuer
+  const getInitials = (provider: string) => {
+    return provider
       .split(' ')
       .map(word => word[0])
       .join('')
@@ -110,17 +114,17 @@ export function AccountCard({ account, onClick, onDelete, onEdit }: AccountCardP
           {/* Avatar */}
           <div className="flex-shrink-0">
             <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-primary-foreground font-bold text-sm">
-              {getInitials(account.issuer)}
+              {getInitials(account.provider)}
             </div>
           </div>
 
           {/* Account Info */}
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-foreground truncate">
-              {account.issuer}
+              {account.provider}
             </h3>
             <p className="text-sm text-muted-foreground truncate">
-              {account.account_name}
+              {account.name}
             </p>
           </div>
 
@@ -159,23 +163,27 @@ export function AccountCard({ account, onClick, onDelete, onEdit }: AccountCardP
               )}
             </Button>
 
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={handleEdit}
-              className="flex-shrink-0 hover:bg-primary/10"
-            >
-              <Edit className="h-4 w-4" />
-            </Button>
+            {onEdit && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleEdit}
+                className="flex-shrink-0 hover:bg-primary/10"
+              >
+                <Edit className="h-4 w-4" />
+              </Button>
+            )}
 
-            <Button
-              size="icon"
-              variant="ghost"
-              onClick={handleDelete}
-              className="flex-shrink-0 hover:bg-destructive/10"
-            >
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
+            {onDelete && (
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={handleDelete}
+                className="flex-shrink-0 hover:bg-destructive/10"
+              >
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            )}
           </div>
         </div>
       </Card>
@@ -185,7 +193,7 @@ export function AccountCard({ account, onClick, onDelete, onEdit }: AccountCardP
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Account</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{account.issuer} - {account.account_name}"?
+              Are you sure you want to delete "{account.provider} - {account.name}"?
               This action cannot be undone. You will need to reconfigure this account if you want to use it again.
             </AlertDialogDescription>
           </AlertDialogHeader>

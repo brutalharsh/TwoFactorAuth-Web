@@ -12,15 +12,15 @@ import { toast } from "sonner";
 
 interface Account {
   id: string;
-  issuer: string;
-  account_name: string;
-  secret: string;
-  algorithm: "SHA1" | "SHA256" | "SHA512";
-  digits: 6 | 8;
+  user_id: string;
+  provider: string; // Previously 'issuer'
+  name: string; // Previously 'account_name'
+  key: string; // Previously 'secret'
+  algorithm: string; // "SHA1" | "SHA256" | "SHA512"
+  digits: number; // 6 or 8
   period: number;
   created_at: string;
-  last_used: string | null;
-  order_index: number;
+  updated_at: string;
 }
 
 const Dashboard = () => {
@@ -48,8 +48,8 @@ const Dashboard = () => {
     if (searchQuery) {
       const filtered = accounts.filter(
         (account) =>
-          account.issuer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          account.account_name.toLowerCase().includes(searchQuery.toLowerCase())
+          account.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          account.name.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setFilteredAccounts(filtered);
     } else {
@@ -61,9 +61,9 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from("accounts")
+        .from("auths")
         .select("*")
-        .order("order_index", { ascending: true })
+        .eq("user_id", user?.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -82,11 +82,11 @@ const Dashboard = () => {
   const handleAccountClick = async (accountId: string) => {
     try {
       await supabase
-        .from("accounts")
-        .update({ last_used: new Date().toISOString() })
+        .from("auths")
+        .update({ updated_at: new Date().toISOString() })
         .eq("id", accountId);
     } catch (error) {
-      console.error("Error updating last_used:", error);
+      console.error("Error updating updated_at:", error);
     }
   };
 
@@ -110,7 +110,7 @@ const Dashboard = () => {
               </div>
               <div>
                 <h1 className="text-xl font-bold">Two Factor Auth</h1>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
+                <p className="text-sm text-muted-foreground">@{user.username}</p>
               </div>
             </div>
 

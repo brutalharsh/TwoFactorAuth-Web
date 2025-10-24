@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { validateSecret, parseOTPAuthUri } from '@/lib/totp';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { Loader2, ChevronDown, QrCode } from 'lucide-react';
 import { QRScannerModal } from './QRScannerModal';
@@ -22,9 +23,10 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'manual' | 'uri' | 'qr'>('manual');
   const [showQRScanner, setShowQRScanner] = useState(false);
+  const { user } = useAuth();
 
   // Manual form state
-  const [issuer, setIssuer] = useState('');
+  const [provider, setProvider] = useState('');
   const [accountName, setAccountName] = useState('');
   const [secret, setSecret] = useState('');
   const [algorithm, setAlgorithm] = useState<'SHA1' | 'SHA256' | 'SHA512'>('SHA1');
@@ -36,7 +38,7 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
   const [uri, setUri] = useState('');
 
   const resetForm = () => {
-    setIssuer('');
+    setProvider('');
     setAccountName('');
     setSecret('');
     setAlgorithm('SHA1');
@@ -48,41 +50,39 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
 
   const handleManualSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!issuer || !accountName || !secret) {
+
+    if (!provider || !accountName || !secret) {
       toast.error('Please fill in all required fields');
       return;
     }
-    
+
     const cleanSecret = secret.replace(/\s/g, '').toUpperCase();
-    
+
     if (!validateSecret(cleanSecret)) {
       toast.error('Invalid secret key format. Must be Base32 encoded.');
       return;
     }
-    
+
     setLoading(true);
-    
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
       if (!user) {
         toast.error('You must be logged in');
         return;
       }
-      
-      const { error } = await supabase.from('accounts').insert({
+
+      const { error } = await supabase.from('auths').insert({
         user_id: user.id,
-        issuer,
-        account_name: accountName,
-        secret: cleanSecret,
+        provider,
+        name: accountName,
+        key: cleanSecret,
         algorithm,
         digits: parseInt(digits),
         period: parseInt(period),
       });
-      
+
       if (error) throw error;
-      
+
       toast.success('Account added successfully!');
       resetForm();
       onAccountAdded();
@@ -113,18 +113,16 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) {
         toast.error('You must be logged in');
         return;
       }
 
-      const { error } = await supabase.from('accounts').insert({
+      const { error } = await supabase.from('auths').insert({
         user_id: user.id,
-        issuer: parsed.issuer,
-        account_name: parsed.account_name,
-        secret: parsed.secret,
+        provider: parsed.issuer,
+        name: parsed.account_name,
+        key: parsed.secret,
         algorithm: parsed.algorithm,
         digits: parsed.digits,
         period: parsed.period,
@@ -155,16 +153,19 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) {
         toast.error('You must be logged in');
         return;
       }
 
-      const { error } = await supabase.from('accounts').insert({
+      const { error } = await supabase.from('auths').insert({
         user_id: user.id,
-        ...data,
+        provider: data.issuer,
+        name: data.account_name,
+        key: data.secret,
+        algorithm: data.algorithm,
+        digits: data.digits,
+        period: data.period,
       });
 
       if (error) throw error;
@@ -193,8 +194,6 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-
       if (!user) {
         toast.error('You must be logged in');
         return;
@@ -202,10 +201,15 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
 
       const accountsToInsert = accounts.map(account => ({
         user_id: user.id,
-        ...account,
+        provider: account.issuer,
+        name: account.account_name,
+        key: account.secret,
+        algorithm: account.algorithm,
+        digits: account.digits,
+        period: account.period,
       }));
 
-      const { error } = await supabase.from('accounts').insert(accountsToInsert);
+      const { error } = await supabase.from('auths').insert(accountsToInsert);
 
       if (error) throw error;
 
@@ -242,12 +246,12 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
           <TabsContent value="manual" className="space-y-4 mt-4">
             <form onSubmit={handleManualSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="issuer">Service Provider *</Label>
+                <Label htmlFor="provider">Service Provider *</Label>
                 <Input
-                  id="issuer"
+                  id="provider"
                   placeholder="e.g., Google, GitHub"
-                  value={issuer}
-                  onChange={(e) => setIssuer(e.target.value)}
+                  value={provider}
+                  onChange={(e) => setProvider(e.target.value)}
                   disabled={loading}
                   required
                 />
