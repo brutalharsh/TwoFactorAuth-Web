@@ -1,0 +1,5 @@
+# Sitemap for Search Engines
+# Update this with your actual domain
+https://passguardsuite.com
+https://passguardsuite.com/auth
+https://passguardsuite.com/dashboard
