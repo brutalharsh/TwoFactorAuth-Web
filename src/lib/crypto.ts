@@ -156,7 +156,7 @@ export async function decryptTOTPSecret(
 ): Promise<string | null> {
   try {
     // Try to get the key from session storage first
-    let key = await getEncryptionKey(userId);
+    const key = await getEncryptionKey(userId);
 
     if (!key) {
       // If no key in session, we'll need to prompt for password

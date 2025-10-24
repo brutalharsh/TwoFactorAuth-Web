@@ -351,9 +351,9 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## 📧 Contact
 
-Project Link: [https://github.com/yourusername/pass-guard-suite](https://github.com/yourusername/pass-guard-suite)
+Project Link: [https://github.com/brutalharsh/TwoFactorAuth-Web.git](https://github.com/brutalharsh/TwoFactorAuth-Web.git)
 
-Website: [https://passguardsuite.com](https://passguardsuite.com)
+Website: [https://auth.brutalharsh.me](https://auth.brutalharsh.me)
 
 ## 🙏 Acknowledgments
 
@@ -368,5 +368,5 @@ Website: [https://passguardsuite.com](https://passguardsuite.com)
 ---
 
 <div align="center">
-  <sub>Built with ❤️ by the Two Factor Auth Team</sub>
+  <sub>Built with ❤️ by Harsh</sub>
 </div>

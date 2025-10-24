@@ -1,5 +1,5 @@
 # Robots.txt for Two Factor Auth
-# https://passguardsuite.com
+# https://auth.brutalharsh.me
 
 User-agent: Googlebot
 Allow: /
@@ -27,7 +27,7 @@ Disallow: /.env
 Disallow: /supabase/
 
 # Sitemap location
-Sitemap: https://passguardsuite.com/sitemap.txt
+Sitemap: https://auth.brutalharsh.me/sitemap.txt
 
 # Crawl-delay for respectful crawling
 Crawl-delay: 1

@@ -1,18 +1,25 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate } from 'react-router-dom';
+import { Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signUp: (email: string, password: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signUp: (username: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (username: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+// Helper to convert username to email format for Supabase
+const usernameToEmail = (username: string) => {
+  // Clean the username and create a fake email
+  const cleanUsername = username.toLowerCase().replace(/[^a-z0-9]/g, '');
+  return `${cleanUsername}@local.app`;
+};
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -21,17 +28,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    // Check for existing session
+    // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -40,30 +45,64 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
+  const signUp = async (username: string, password: string) => {
+    try {
+      // Convert username to email format
+      const email = usernameToEmail(username);
 
-    if (!error) {
-      navigate('/');
+      const { error, data } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            username: username,
+            display_name: username
+          }
+        }
+      });
+
+      if (error) {
+        // Check if it's an email validation error and provide a clearer message
+        if (error.message.includes('email')) {
+          return { error: new Error('Username already exists or invalid username') };
+        }
+        return { error };
+      }
+
+      // Auto sign in after signup for better UX
+      if (data.user) {
+        await signIn(username, password);
+      }
+
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
     }
-
-    return { error };
   };
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (!error) {
+  const signIn = async (username: string, password: string) => {
+    try {
+      // Convert username to email format
+      const email = usernameToEmail(username);
+
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        // Provide clearer error messages
+        if (error.message.includes('Invalid login credentials')) {
+          return { error: new Error('Invalid username or password') };
+        }
+        return { error };
+      }
+
       navigate('/');
+      return { error: null };
+    } catch (error) {
+      return { error: error as Error };
     }
-    
-    return { error };
   };
 
   const signOut = async () => {

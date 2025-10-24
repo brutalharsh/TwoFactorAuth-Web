@@ -50,28 +50,51 @@ export function parseOTPAuthUri(uri: string): {
 } | null {
   try {
     const url = new URL(uri);
-    
+
     if (url.protocol !== 'otpauth:') {
       return null;
     }
-    
+
     if (url.host !== 'totp') {
       return null;
     }
-    
-    const pathParts = url.pathname.slice(1).split(':');
-    const issuer = url.searchParams.get('issuer') || pathParts[0] || 'Unknown';
-    const account_name = pathParts[1] || pathParts[0] || 'Unknown Account';
+
+    // Extract the path (remove leading slash)
+    const fullPath = decodeURIComponent(url.pathname.slice(1));
+
+    // Parse the path - it can be in formats like:
+    // "Example:alice@google.com" or just "alice@google.com" or "Example"
+    let issuer = '';
+    let account_name = '';
+
+    if (fullPath.includes(':')) {
+      const pathParts = fullPath.split(':');
+      issuer = pathParts[0];
+      account_name = pathParts[1] || '';
+    } else {
+      // If no colon, the whole path is either the account name or issuer
+      account_name = fullPath;
+    }
+
+    // Override with query parameter if present
+    if (url.searchParams.get('issuer')) {
+      issuer = url.searchParams.get('issuer') || issuer;
+    }
+
+    // Fallbacks to ensure we always have values
+    issuer = issuer || 'Unknown Issuer';
+    account_name = account_name || 'Unknown Account';
+
     const secret = url.searchParams.get('secret');
-    
+
     if (!secret) {
       return null;
     }
-    
+
     const algorithm = (url.searchParams.get('algorithm') || 'SHA1').toUpperCase() as 'SHA1' | 'SHA256' | 'SHA512';
     const digits = parseInt(url.searchParams.get('digits') || '6') as 6 | 8;
     const period = parseInt(url.searchParams.get('period') || '30');
-    
+
     return {
       issuer,
       account_name,

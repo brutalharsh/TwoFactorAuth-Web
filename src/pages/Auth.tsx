@@ -4,18 +4,18 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Shield, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Auth = () => {
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'login' | 'signup'>('login');
-  
+
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
 
@@ -27,51 +27,56 @@ const Auth = () => {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password) {
+
+    if (!username || !password) {
       toast.error('Please fill in all fields');
       return;
     }
-    
+
     setLoading(true);
-    const { error } = await signIn(email, password);
-    
+    const { error } = await signIn(username, password);
+
     if (error) {
       toast.error(error.message);
     } else {
       toast.success('Successfully logged in!');
     }
-    
+
     setLoading(false);
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!email || !password || !confirmPassword) {
+
+    if (!username || !password || !confirmPassword) {
       toast.error('Please fill in all fields');
       return;
     }
-    
-    if (password.length < 8) {
-      toast.error('Password must be at least 8 characters');
+
+    if (username.length < 3) {
+      toast.error('Username must be at least 3 characters');
       return;
     }
-    
+
+    if (password.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+
     if (password !== confirmPassword) {
       toast.error('Passwords do not match');
       return;
     }
-    
+
     setLoading(true);
-    const { error } = await signUp(email, password);
-    
+    const { error } = await signUp(username, password);
+
     if (error) {
       toast.error(error.message);
     } else {
       toast.success('Account created successfully!');
     }
-    
+
     setLoading(false);
   };
 
@@ -87,42 +92,42 @@ const Auth = () => {
           <CardTitle className="text-3xl font-bold">TwoFactorAuth</CardTitle>
           <CardDescription>Secure your accounts with 2FA codes</CardDescription>
         </CardHeader>
-        
+
         <CardContent>
           <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'login' | 'signup')}>
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Login</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="login-email">Email</Label>
+                  <Label htmlFor="login-username">Username</Label>
                   <Input
-                    id="login-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="login-username"
+                    type="text"
+                    placeholder="Enter username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     disabled={loading}
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="login-password">Password</Label>
                   <Input
                     id="login-password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Enter password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
                     required
                   />
                 </div>
-                
+
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
                     <>
@@ -135,51 +140,54 @@ const Auth = () => {
                 </Button>
               </form>
             </TabsContent>
-            
+
             <TabsContent value="signup">
               <form onSubmit={handleSignup} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-username">Username</Label>
                   <Input
-                    id="signup-email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="signup-username"
+                    type="text"
+                    placeholder="Choose username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
                     disabled={loading}
                     required
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Minimum 3 characters
+                  </p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="signup-password">Password</Label>
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Choose password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     disabled={loading}
                     required
                   />
                   <p className="text-xs text-muted-foreground">
-                    Minimum 8 characters
+                    Minimum 6 characters
                   </p>
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="confirm-password">Confirm Password</Label>
                   <Input
                     id="confirm-password"
                     type="password"
-                    placeholder="••••••••"
+                    placeholder="Confirm password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     disabled={loading}
                     required
                   />
                 </div>
-                
+
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? (
                     <>
@@ -194,10 +202,6 @@ const Auth = () => {
             </TabsContent>
           </Tabs>
         </CardContent>
-        
-        <CardFooter className="flex flex-col space-y-2 text-center text-sm text-muted-foreground">
-          <p>All data is encrypted and stored securely</p>
-        </CardFooter>
       </Card>
     </div>
   );

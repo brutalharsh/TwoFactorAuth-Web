@@ -1,18 +1,42 @@
 {
-  "name": "pass-guard-suite",
-  "private": true,
+  "name": "twofactorauth",
+  "private": false,
   "version": "1.0.0",
   "type": "module",
-  "description": "A secure, modern 2FA authenticator app with cloud sync and QR code support",
+  "description": "A modern, secure 2FA authenticator app with QR code scanning, cloud sync, drag-and-drop, and dark mode. Built with React, TypeScript, and Supabase.",
   "author": "Your Name",
   "license": "MIT",
+  "homepage": "https://twofactorauth.app",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yourusername/TwoFactorAuth.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/TwoFactorAuth/issues"
+  },
   "keywords": [
     "2fa",
+    "two-factor-authentication",
     "totp",
     "authenticator",
     "security",
-    "two-factor",
-    "otp"
+    "otp",
+    "mfa",
+    "multi-factor-authentication",
+    "qr-code",
+    "qr-scanner",
+    "react",
+    "typescript",
+    "supabase",
+    "pwa",
+    "cloud-sync",
+    "dark-mode",
+    "encryption",
+    "web-crypto",
+    "drag-and-drop",
+    "shadcn-ui",
+    "vite",
+    "tailwindcss"
   ],
   "scripts": {
     "dev": "vite",
@@ -22,6 +46,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@dnd-kit/core": "^6.3.1",
+    "@dnd-kit/sortable": "^10.0.0",
+    "@dnd-kit/utilities": "^3.2.2",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
@@ -52,6 +79,8 @@
     "@radix-ui/react-tooltip": "^1.2.7",
     "@supabase/supabase-js": "^2.76.1",
     "@tanstack/react-query": "^5.83.0",
+    "@types/bcryptjs": "^2.4.6",
+    "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",

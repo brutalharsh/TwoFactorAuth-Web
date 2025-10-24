@@ -87,9 +87,9 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
       resetForm();
       onAccountAdded();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding account:', error);
-      toast.error(error.message || 'Failed to add account');
+      toast.error(error instanceof Error ? error.message : 'Failed to add account');
     } finally {
       setLoading(false);
     }
@@ -136,9 +136,9 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
       resetForm();
       onAccountAdded();
       onOpenChange(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding account:', error);
-      toast.error(error.message || 'Failed to add account');
+      toast.error(error instanceof Error ? error.message : 'Failed to add account');
     } finally {
       setLoading(false);
     }
@@ -174,9 +174,49 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
       onAccountAdded();
       onOpenChange(false);
       setShowQRScanner(false);
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error adding account:', error);
-      toast.error(error.message || 'Failed to add account');
+      toast.error(error instanceof Error ? error.message : 'Failed to add account');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBatchQRScan = async (accounts: Array<{
+    issuer: string;
+    account_name: string;
+    secret: string;
+    algorithm: string;
+    digits: number;
+    period: number;
+  }>) => {
+    setLoading(true);
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast.error('You must be logged in');
+        return;
+      }
+
+      const accountsToInsert = accounts.map(account => ({
+        user_id: user.id,
+        ...account,
+      }));
+
+      const { error } = await supabase.from('accounts').insert(accountsToInsert);
+
+      if (error) throw error;
+
+      toast.success(`Successfully added ${accounts.length} account${accounts.length > 1 ? 's' : ''}!`);
+      resetForm();
+      onAccountAdded();
+      onOpenChange(false);
+      setShowQRScanner(false);
+    } catch (error) {
+      console.error('Error adding accounts:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to add accounts');
     } finally {
       setLoading(false);
     }
@@ -192,7 +232,7 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
           </DialogDescription>
         </DialogHeader>
         
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as 'manual' | 'uri' | 'qr')}>
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="manual">Manual Entry</TabsTrigger>
             <TabsTrigger value="uri">Import URI</TabsTrigger>
@@ -248,7 +288,7 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
                 <CollapsibleContent className="space-y-4 pt-4">
                   <div className="space-y-2">
                     <Label htmlFor="algorithm">Algorithm</Label>
-                    <Select value={algorithm} onValueChange={(v: any) => setAlgorithm(v)}>
+                    <Select value={algorithm} onValueChange={(v) => setAlgorithm(v as 'SHA1' | 'SHA256' | 'SHA512')}>
                       <SelectTrigger id="algorithm">
                         <SelectValue />
                       </SelectTrigger>
@@ -262,7 +302,7 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
                   
                   <div className="space-y-2">
                     <Label htmlFor="digits">Digits</Label>
-                    <Select value={digits} onValueChange={(v: any) => setDigits(v)}>
+                    <Select value={digits} onValueChange={(v) => setDigits(v as '6' | '8')}>
                       <SelectTrigger id="digits">
                         <SelectValue />
                       </SelectTrigger>
@@ -368,6 +408,7 @@ export function AddAccountModal({ open, onOpenChange, onAccountAdded }: AddAccou
           isOpen={showQRScanner}
           onClose={() => setShowQRScanner(false)}
           onScan={handleQRScan}
+          onBatchScan={handleBatchQRScan}
         />
       </DialogContent>
     </Dialog>
