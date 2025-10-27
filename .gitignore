@@ -32,7 +32,6 @@ dist-ssr
 # Development Documentation
 CLAUDE.md
 IMPLEMENTATION_STATUS.md
-FAQ.json
 
 # Supabase
 supabase/.temp
