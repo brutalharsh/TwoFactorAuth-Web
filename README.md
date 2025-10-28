@@ -3,19 +3,19 @@
 <div align="center">
   <img src="public/applogo.png" alt="Two Factor Auth Logo" width="120" height="120" />
 
-  <h3 align="center">Secure 2FA Authenticator with Cloud Sync</h3>
+  <h3 align="center">Secure 2FA Authenticator</h3>
 
   <p align="center">
-    A modern, secure two-factor authentication app with QR code scanning, cloud synchronization, and dark mode support.
+    A modern two-factor authentication app with QR code scanning and dark mode support.
     <br />
     <a href="#features"><strong>Explore Features »</strong></a>
     <br />
     <br />
     <a href="#demo">View Demo</a>
     ·
-    <a href="https://github.com/yourusername/pass-guard-suite/issues">Report Bug</a>
+    <a href="https://github.com/brutalharsh/TwoFactorAuth-Web/issues">Report Bug</a>
     ·
-    <a href="https://github.com/yourusername/pass-guard-suite/issues">Request Feature</a>
+    <a href="https://github.com/brutalharsh/TwoFactorAuth-Web/issues">Request Feature</a>
   </p>
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
@@ -38,7 +38,7 @@
   - [Database Setup](#database-setup)
 - [Usage](#usage)
 - [Architecture](#architecture)
-- [Security](#security)
+- [Security Notice](#security-notice)
 - [Roadmap](#roadmap)
 - [Contributing](#contributing)
 - [License](#license)
@@ -47,46 +47,33 @@
 
 ## 🎯 About
 
-Two Factor Auth is a professional-grade two-factor authentication (2FA) application that helps users secure their online accounts with Time-based One-Time Passwords (TOTP). Built with modern web technologies and a focus on security, it provides a seamless experience across all devices with cloud synchronization.
+Two Factor Auth is a two-factor authentication (2FA) application that helps users secure their online accounts with Time-based One-Time Passwords (TOTP). Built with modern web technologies, it provides a seamless experience across all devices.
 
 ### Why Two Factor Auth?
 
-- **🔒 Security First**: All secrets are encrypted using Web Crypto API before storage
-- **☁️ Cloud Sync**: Access your 2FA codes from any device
 - **📱 Responsive**: Works perfectly on desktop, tablet, and mobile
 - **🌙 Dark Mode**: Easy on the eyes with automatic theme detection
 - **📸 QR Scanner**: Quickly add accounts by scanning QR codes
 - **🚀 Fast**: Built with Vite for lightning-fast performance
+- **🔑 Username-Based**: Simple username/password authentication
 
 ## ✨ Features
 
 ### Core Features
 
 - ✅ **TOTP Code Generation** - Generate 6/8 digit codes with SHA1/SHA256/SHA512 algorithms
-- ✅ **Cloud Synchronization** - Sync across all your devices with Supabase
 - ✅ **QR Code Scanner** - Add accounts by scanning or uploading QR code images
 - ✅ **Dark/Light Mode** - Automatic theme detection with manual override
-- ✅ **Account Management** - Add, edit, delete, and organize your 2FA accounts
+- ✅ **Account Management** - Add and organize your 2FA accounts
 - ✅ **Search & Filter** - Quickly find accounts with instant search
 - ✅ **Export QR Codes** - Export any account as a QR code for backup
-- ✅ **Secure Authentication** - Email/password authentication with Supabase Auth
+- ✅ **Custom Authentication** - Username/password authentication
 - ✅ **Real-time Updates** - Live countdown timers with visual indicators
 
-### Security Features
+### ⚠️ Development Features
 
-- 🔐 **Encrypted Storage** - AES-GCM 256-bit encryption for all secrets
-- 🔑 **PBKDF2 Key Derivation** - 100,000 iterations for maximum security
-- 🛡️ **Row Level Security** - Database-level isolation of user data
-- 📋 **Clipboard Auto-clear** - Optional auto-clear after copying codes
-- ⏰ **Session Management** - Secure session handling with auto-refresh
-
-### Coming Soon
-
-- 📱 PWA Support - Install as a mobile app
-- 🔄 Google Authenticator Migration - Import from Google Authenticator
-- 📦 Bulk Import/Export - Backup and restore all accounts
-- ⌨️ Keyboard Shortcuts - Navigate faster with keyboard
-- 🎯 Biometric Authentication - Face ID/Touch ID support
+- 📝 **Plain Text Passwords** - For development only (NOT FOR PRODUCTION)
+- 🔓 **Disabled RLS** - Row Level Security disabled for development
 
 ## 🛠️ Tech Stack
 
@@ -98,19 +85,17 @@ Two Factor Auth is a professional-grade two-factor authentication (2FA) applicat
 - **Tailwind CSS 3.4** - Styling
 - **shadcn/ui** - Component library
 - **React Router v6** - Routing
-- **TanStack Query** - Server state management
 
 ### Backend & Database
 
 - **Supabase** - Backend as a Service
   - PostgreSQL database
-  - Authentication
-  - Row Level Security (RLS)
-  - Real-time subscriptions
+  - Custom authentication system
+  - Database client
 
 ### Security & Crypto
 
-- **Web Crypto API** - Encryption/decryption
+- **Web Crypto API** - Encryption/decryption (infrastructure ready)
 - **jsotp** - TOTP generation
 - **qrcode** - QR code generation
 - **qr-scanner** - QR code scanning
@@ -131,8 +116,8 @@ Before you begin, ensure you have the following installed:
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/yourusername/pass-guard-suite.git
-   cd pass-guard-suite
+   git clone https://github.com/brutalharsh/TwoFactorAuth-Web.git
+   cd TwoFactorAuth
    ```
 
 2. **Install dependencies**
@@ -172,58 +157,15 @@ Before you begin, ensure you have the following installed:
 
 1. **Run the migration**
 
-   Go to your Supabase SQL Editor and run:
+   Go to your Supabase SQL Editor and run the migration from:
+   `/supabase/migrations/username_only_schema.sql`
 
-   ```sql
-   -- Create accounts table
-   CREATE TABLE public.accounts (
-     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
-     issuer TEXT NOT NULL,
-     account_name TEXT NOT NULL,
-     secret TEXT NOT NULL,
-     algorithm TEXT DEFAULT 'SHA1',
-     digits INTEGER DEFAULT 6,
-     period INTEGER DEFAULT 30,
-     icon_name TEXT,
-     created_at TIMESTAMPTZ DEFAULT NOW(),
-     last_used TIMESTAMPTZ,
-     order_index INTEGER DEFAULT 0,
-     encrypted_secret TEXT,
-     encryption_iv TEXT,
-     encryption_salt TEXT,
-     is_encrypted BOOLEAN DEFAULT false,
-     UNIQUE(user_id, issuer, account_name)
-   );
+   This will create:
+   - `users` table with username and password fields
+   - `auths` table for 2FA accounts
+   - Necessary indexes and triggers
 
-   -- Enable RLS
-   ALTER TABLE public.accounts ENABLE ROW LEVEL SECURITY;
-
-   -- Create RLS policies
-   CREATE POLICY "Users can only see their own accounts"
-     ON public.accounts FOR SELECT
-     USING (auth.uid() = user_id);
-
-   CREATE POLICY "Users can only insert their own accounts"
-     ON public.accounts FOR INSERT
-     WITH CHECK (auth.uid() = user_id);
-
-   CREATE POLICY "Users can only update their own accounts"
-     ON public.accounts FOR UPDATE
-     USING (auth.uid() = user_id);
-
-   CREATE POLICY "Users can only delete their own accounts"
-     ON public.accounts FOR DELETE
-     USING (auth.uid() = user_id);
-
-   -- Create indexes
-   CREATE INDEX idx_accounts_user_id ON public.accounts(user_id);
-   CREATE INDEX idx_accounts_order ON public.accounts(user_id, order_index);
-   ```
-
-2. **Enable Authentication**
-   - Go to Authentication > Providers
-   - Enable Email/Password authentication
+2. **Note**: Row Level Security is disabled for development
 
 ### Running the Application
 
@@ -247,11 +189,15 @@ Before you begin, ensure you have the following installed:
 
 ## 📱 Usage
 
-### Adding Your First Account
+### Creating an Account
 
-1. **Sign up or log in** with your email and password
-2. Click the **"+ Add Account"** button
-3. Choose one of three methods:
+1. **Sign up** with a username and password
+2. **Log in** with your credentials
+
+### Adding Your First 2FA Account
+
+1. Click the **"+ Add Account"** button
+2. Choose one of three methods:
    - **Manual Entry**: Enter the service name and secret key
    - **Import URI**: Paste an otpauth:// URI
    - **Scan QR**: Upload a QR code image
@@ -261,7 +207,6 @@ Before you begin, ensure you have the following installed:
 - **Generate Codes**: Codes automatically refresh every 30 seconds
 - **Copy Codes**: Click any code to copy it to your clipboard
 - **Search**: Use the search bar to filter accounts
-- **Export**: Click the menu icon to export an account as QR code
 
 ## 🏗️ Architecture
 
@@ -274,10 +219,10 @@ src/
 │   ├── ThemeToggle.tsx  # Theme switcher
 │   └── ui/              # shadcn/ui components
 ├── contexts/            # React contexts
-│   ├── AuthContext.tsx  # Authentication state
+│   ├── AuthContext.tsx  # Custom authentication
 │   └── ThemeContext.tsx # Theme management
 ├── lib/                 # Utility functions
-│   ├── crypto.ts        # Encryption utilities
+│   ├── crypto.ts        # Encryption utilities (ready for integration)
 │   ├── totp.ts          # TOTP generation
 │   └── utils.ts         # Helper functions
 ├── pages/               # Route components
@@ -288,62 +233,56 @@ src/
     └── supabase/        # Supabase client
 ```
 
-## 🔒 Security
+## 🔒 Security Notice
 
-Two Factor Auth takes security seriously:
+⚠️ **IMPORTANT**: This is a development version with the following security considerations:
 
-### Data Protection
+### Current Implementation (Development Only)
 
-- **Encryption at Rest**: All TOTP secrets are encrypted using AES-GCM 256-bit encryption
-- **Key Derivation**: PBKDF2 with 100,000 iterations for key generation
-- **Secure Transport**: All data transmitted over HTTPS
-- **Database Security**: Row Level Security ensures data isolation
+- **Plain Text Passwords**: Passwords are stored without encryption
+- **No RLS**: Row Level Security is disabled
+- **Session Storage**: Uses localStorage for session management
+- **No Email Verification**: Username-only authentication
 
-### Best Practices
+### For Production
 
-- Regular security audits
-- Dependency updates
-- No tracking or analytics
-- Open source for transparency
+Before deploying to production, you MUST:
 
-### Reporting Security Issues
-
-Please report security vulnerabilities to [security@passguardsuite.com]
+1. Implement password hashing (bcrypt, argon2, etc.)
+2. Enable and configure Row Level Security
+3. Implement proper session management
+4. Add email verification
+5. Encrypt TOTP secrets before storage
+6. Use secure authentication methods
 
 ## 🗺️ Roadmap
 
-### Version 1.1 (Q1 2025)
+### Next Steps for Production
+
+- [ ] Implement password hashing
+- [ ] Enable Row Level Security
+- [ ] Add email-based authentication
+- [ ] Encrypt TOTP secrets
+- [ ] Add backup/recovery options
+- [ ] Implement rate limiting
+
+### Future Features
 
 - [ ] PWA support with offline mode
 - [ ] Biometric authentication
 - [ ] Bulk import/export
-- [ ] Account categories/folders
-
-### Version 1.2 (Q2 2025)
-
 - [ ] Browser extension
-- [ ] Desktop app (Electron)
-- [ ] Backup encryption
-- [ ] Account sharing (teams)
-
-### Version 2.0 (Q3 2025)
-
-- [ ] Mobile apps (iOS/Android)
-- [ ] Hardware key support
-- [ ] Advanced backup options
-- [ ] Enterprise features
+- [ ] Mobile apps
 
 ## 🤝 Contributing
 
-Contributions are what make the open source community amazing! Any contributions you make are **greatly appreciated**.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the Project
 2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the Branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
-
-Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and development process.
 
 ## 📄 License
 
@@ -363,7 +302,6 @@ Website: [https://auth.brutalharsh.me](https://auth.brutalharsh.me)
 - [Tailwind CSS](https://tailwindcss.com) - Utility-first CSS framework
 - [Vite](https://vitejs.dev) - Lightning fast build tool
 - [React](https://reactjs.org) - UI library
-- All contributors who help improve this project
 
 ---
 
